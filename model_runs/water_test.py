@@ -18,8 +18,8 @@ avge0 = {1: -187.6043857100553, 8: -93.80219285502734}
 batch_size = 4
 data = LightningData(root,batch_size=batch_size,cutoff=cutoff,atomic_energies=avge0)
 
-training_epochs = 1
-tuning_epochs = 1
+training_epochs = 500
+tuning_epochs = 100
 
 from cace.representations import Cace
 from cace.modules import BesselRBF, GaussianRBF, GaussianRBFCentered
@@ -138,6 +138,7 @@ task.fit(data,dev_run=dev_run,max_epochs=training_epochs,chkpt=chkpt, progress_b
 
 #If you want to do the "fine-tuning" w/higher energy loss:
 if tuning_epochs > 0:
+    os.system(f"mv lightning_logs/{logs_name}/best_model.pth lightning_logs/{logs_name}/best_model_noft.pth")
     e_loss = GetLoss(
         target_name="energy",
         predict_name='pred_energy',
@@ -154,13 +155,14 @@ if tuning_epochs > 0:
         num += 1
     if latest_version:
         chkpt = glob.glob(f"{latest_version}/checkpoints/*.ckpt")[0]
+    task.load(chkpt)
     task = LightningTrainingTask(model,losses=losses,metrics=metrics,
                                  logs_directory="lightning_logs",name=logs_name,
                                  scheduler_args={'mode': 'min', 'factor': 0.8, 'patience': 10},
                                  optimizer_args={'lr': 0.01},
                                 )
-    task.fit(data,dev_run=dev_run,max_epochs=training_epochs+tuning_epochs,
-             chkpt=chkpt, progress_bar=progress_bar)
+    task.fit(data,dev_run=dev_run,max_epochs=tuning_epochs,
+             progress_bar=progress_bar)
 
 
 
