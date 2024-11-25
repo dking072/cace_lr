@@ -10,20 +10,23 @@ import lightning as L
 from cace.data.atomic_data import AtomicData
 from cace.tools.torch_geometric import Dataset, DataLoader
 
-def from_h5key(h5key,h5fn,cutoff=None,cell=50):
+def from_h5key(h5key,h5fn,cutoff=None,cell=25):
     with h5py.File(h5fn, "r") as f:
         data = f[h5key]
+        hartree_to_ev = 27.2114
+        bohr_to_angstrom = 0.529177
 
         #Make atoms object
         els = np.array(data["atomic_numbers"])
-        pos = np.array(data["positions"])
+        pos = np.array(data["positions"]) * bohr_to_angstrom
         pos = pos - pos.mean(axis=0) #center
         atoms = ase.Atoms(numbers=els,positions=pos)
         ad = AtomicData.from_atoms(atoms,cutoff=cutoff) #makes graph structure
 
-        ad.energy = torch.Tensor(np.array(data["energy"]))
-        ad.force = torch.Tensor(np.array(data["force"]))
-        ad.dipole = torch.Tensor(np.array(data["dipole"]))[None,:]
+        ad.energy = torch.Tensor(np.array(data["energy"])) * hartree_to_ev
+        ad.force = torch.Tensor(np.array(data["force"])) * hartree_to_ev/bohr_to_angstrom
+        ad.dipole = torch.Tensor(np.array(data["dipole"]))[None,:] / bohr_to_angstrom
+        ad.mbi_charges = torch.Tensor(np.array(data["mbis_charges"])).squeeze()
         ad.cell = torch.Tensor([[cell,0,0],[0,cell,0],[0,0,cell]])
         
         return ad
@@ -105,6 +108,6 @@ class SpiceData(L.LightningDataModule):
         return val_loader
 
     def test_dataloader(self):
-        val_loader = DataLoader(self.test, batch_size=self.batch_size, drop_last=False,
+        test_loader = DataLoader(self.test, batch_size=self.batch_size, drop_last=False,
                                 shuffle=False, num_workers = self.num_cpus)
-        return val_loader
+        return test_loader
