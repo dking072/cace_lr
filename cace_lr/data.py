@@ -27,8 +27,7 @@ def from_h5key(h5key,h5fn,cutoff=None,cell=25):
         ad.force = torch.Tensor(np.array(data["force"])) * hartree_to_ev/bohr_to_angstrom
         ad.dipole = torch.Tensor(np.array(data["dipole"]))[None,:] * bohr_to_angstrom
         ad.mbi_charges = torch.Tensor(np.array(data["mbis_charges"])).squeeze()
-        #ad.cell = torch.Tensor([[cell,0,0],[0,cell,0],[0,0,cell]]) #cell no longer needed
-        
+        #ad.cell = torch.Tensor([[cell,0,0],[0,cell,0],[0,0,cell]])
         return ad
 
 class SpiceDataset(Dataset):
@@ -46,7 +45,7 @@ class SpiceDataset(Dataset):
         return from_h5key(f"c{idx}",h5fn=self.root,cutoff=self.cutoff)
 
 class SpiceInMemoryDataset(Dataset):
-    def __init__(self,root="data/aodata.h5",cutoff=4.0,
+    def __init__(self,root="data/spice-dipep.h5",cutoff=4.0,
                 transform=None, pre_transform=None, pre_filter=None):
         super().__init__(root, transform, pre_transform, pre_filter)
         self.root = root
@@ -68,7 +67,7 @@ class SpiceInMemoryDataset(Dataset):
         return self.dataset[idx]
 
 class SpiceData(L.LightningDataModule):
-    def __init__(self, root="data/aodata.h5", cutoff=4.0, in_memory=False, drop_last=True,
+    def __init__(self, root="data/spice-dipep.h5", cutoff=4.0, in_memory=False, drop_last=True,
                  batch_size=32, valid_p=0.1, test_p=0.1):
         super().__init__()
         self.batch_size = batch_size

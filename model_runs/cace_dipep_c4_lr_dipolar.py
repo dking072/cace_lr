@@ -7,12 +7,12 @@ on_cluster = False
 if 'SLURM_JOB_CPUS_PER_NODE' in os.environ.keys():
     on_cluster = True
 if on_cluster:
-    root = "/global/scratch/users/king1305/data/spice-dipep-charged.h5"
+    root = "/global/scratch/users/king1305/data/spice-dipep-dipolar.h5"
 else:
-    root = "/home/king1305/ORBITAL_LABELING/cace_lr/data/spice-dipep-charged.h5"
+    root = "/home/king1305/ORBITAL_LABELING/cace_lr/data/spice-dipep-dipolar.h5"
 
-LR = False
-logs_name = "cace_dipep_c4_charged"
+LR = True
+logs_name = "cace_dipep_c4_dipolar"
 if LR:
     logs_name += "_lr"
 else:
