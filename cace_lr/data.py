@@ -27,8 +27,7 @@ def from_h5key(h5key,h5fn,cutoff=None,cell=25):
         ad.force = torch.Tensor(np.array(data["force"])) * hartree_to_ev/bohr_to_angstrom
         ad.dipole = torch.Tensor(np.array(data["dipole"]))[None,:] * bohr_to_angstrom
         ad.mbi_charges = torch.Tensor(np.array(data["mbis_charges"])).squeeze()
-        # ad.cell = torch.Tensor([[cell,0,0],[0,cell,0],[0,0,cell]])
-        
+        #ad.cell = torch.Tensor([[cell,0,0],[0,cell,0],[0,0,cell]])
         return ad
 
 class SpiceDataset(Dataset):
