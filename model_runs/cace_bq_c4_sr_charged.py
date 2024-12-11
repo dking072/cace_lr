@@ -27,16 +27,16 @@ on_cluster = False
 if 'SLURM_JOB_CPUS_PER_NODE' in os.environ.keys():
     on_cluster = True
 if on_cluster:
-    root = f"/global/scratch/users/king1305/data/spice-dipep-{dtype}-test.h5"
+    root = f"/global/scratch/users/king1305/data/spice-dipep-{dtype}.h5"
 else:
-    root = f"/home/king1305/ORBITAL_LABELING/cace_lr/data/spice-dipep-{dtype}-test.h5"
+    root = f"/home/king1305/ORBITAL_LABELING/cace_lr/data/spice-dipep-{dtype}.h5"
 
 #Load data
 torch.set_default_dtype(torch.float32)
 cace.tools.setup_logger(level='INFO')
 logging.info("reading data")
 from cace_lr.data import SpiceData
-data = SpiceData(root,cutoff,batch_size=batch_size,in_memory=on_cluster)
+data = SpiceData(root,cutoff,batch_size=batch_size,in_memory=on_cluster,valid_p=0.1,test_p=0)
 train_loader = data.train_dataloader()
 valid_loader = data.val_dataloader()
 
@@ -47,22 +47,21 @@ logging.info(f"device: {use_device}")
 
 logging.info("building CACE representation")
 radial_basis = BesselRBF(cutoff=cutoff, n_rbf=6, trainable=True)
-cutoff_fn = PolynomialCutoff(cutoff=cutoff)
-
+cutoff_fn = PolynomialCutoff(cutoff=cutoff, p=5)
 cace_representation = Cace(
-    zs=[1,6,7,8],
+    zs=[1, 6, 7, 8],
     n_atom_basis=4,
     embed_receiver_nodes=True,
     cutoff=cutoff,
     cutoff_fn=cutoff_fn,
     radial_basis=radial_basis,
-    n_radial_basis=12,
-    max_l=4,
+    n_radial_basis=8,
+    max_l=3,
     max_nu=3,
+    device=device,
     num_message_passing=1,
     type_message_passing=["M", "Ar", "Bchi"],
     args_message_passing={'Bchi': {'shared_channels': False, 'shared_l': False}},
-    device=device,
     timeit=False
 )
 
