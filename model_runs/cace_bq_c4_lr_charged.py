@@ -55,13 +55,13 @@ cace_representation = Cace(
     cutoff=cutoff,
     cutoff_fn=cutoff_fn,
     radial_basis=radial_basis,
-    n_radial_basis=8
+    n_radial_basis=8,
     max_l=3,
     max_nu=3,
     device=device,
     num_message_passing=1,
-    type_message_passing=[“M”, “Ar”, “Bchi”],
-    args_message_passing={‘Bchi’: {‘shared_channels’: False, ‘shared_l’: False}},
+    type_message_passing=["M", "Ar", "Bchi"],
+    args_message_passing={'Bchi': {'shared_channels': False, 'shared_l': False}},
     timeit=False
 )
 
