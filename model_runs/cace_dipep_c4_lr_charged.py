@@ -20,7 +20,8 @@ else:
 cutoff = 4.0
 batch_size = 4
 from cace_lr.data import SpiceData
-data = SpiceData(root,cutoff,batch_size=batch_size,in_memory=on_cluster)
+#Make sure to set test_p to zero!
+data = SpiceData(root,cutoff,batch_size=batch_size,in_memory=on_cluster,valid_p=0.1,test_p=0)
 
 from cace.representations import Cace
 from cace.modules import BesselRBF, GaussianRBF, GaussianRBFCentered
@@ -31,7 +32,7 @@ radial_basis = BesselRBF(cutoff=cutoff, n_rbf=6, trainable=True)
 cutoff_fn = PolynomialCutoff(cutoff=cutoff)
 
 representation = Cace(
-    zs=[1,6,7,8,16],
+    zs=[1,6,7,8],
     n_atom_basis=4,
     embed_receiver_nodes=True,
     cutoff=cutoff,
