@@ -10,7 +10,7 @@ import lightning as L
 from cace.data.atomic_data import AtomicData
 from cace.tools.torch_geometric import Dataset, DataLoader
 
-def from_h5key(h5key,h5fn,cutoff=None):
+def from_h5key(h5key,h5fn,cutoff=None,cell=25):
     with h5py.File(h5fn, "r") as f:
         data = f[h5key]
         hartree_to_ev = 27.2114
@@ -27,7 +27,7 @@ def from_h5key(h5key,h5fn,cutoff=None):
         ad.force = torch.Tensor(np.array(data["force"])) * hartree_to_ev/bohr_to_angstrom
         ad.dipole = torch.Tensor(np.array(data["dipole"]))[None,:] * bohr_to_angstrom
         ad.mbi_charges = torch.Tensor(np.array(data["mbis_charges"])).squeeze()
-        # ad.cell = torch.Tensor([[cell,0,0],[0,cell,0],[0,0,cell]]) #cell no longer needed
+        #ad.cell = torch.Tensor([[cell,0,0],[0,cell,0],[0,0,cell]]) #cell no longer needed
         
         return ad
 
