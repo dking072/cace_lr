@@ -10,7 +10,7 @@ import lightning as L
 from cace.data.atomic_data import AtomicData
 from cace.tools.torch_geometric import Dataset, DataLoader
 
-def from_h5key(h5key,h5fn,cutoff=None,cell=25):
+def from_h5key(h5key,h5fn,cutoff=None):
     with h5py.File(h5fn, "r") as f:
         data = f[h5key]
         hartree_to_ev = 27.2114
@@ -26,8 +26,8 @@ def from_h5key(h5key,h5fn,cutoff=None,cell=25):
         ad.energy = torch.Tensor(np.array(data["energy"])) * hartree_to_ev
         ad.force = torch.Tensor(np.array(data["force"])) * hartree_to_ev/bohr_to_angstrom
         ad.dipole = torch.Tensor(np.array(data["dipole"]))[None,:] * bohr_to_angstrom
+        ad.quadrupole = torch.Tensor(np.array(data["quadrupole"]))[None,...] * bohr_to_angstrom**2
         ad.mbi_charges = torch.Tensor(np.array(data["mbis_charges"])).squeeze()
-        #ad.cell = torch.Tensor([[cell,0,0],[0,cell,0],[0,0,cell]])
         return ad
 
 class SpiceDataset(Dataset):
@@ -66,6 +66,7 @@ class SpiceInMemoryDataset(Dataset):
     def get(self, idx):
         return self.dataset[idx]
 
+#Should I subtract average energies, etc.? huh...
 class SpiceData(L.LightningDataModule):
     def __init__(self, root="data/spice-dipep.h5", cutoff=4.0, in_memory=False, drop_last=True,
                  batch_size=32, valid_p=0.1, test_p=0.1):
