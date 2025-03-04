@@ -26,7 +26,11 @@ def from_h5key(h5key,h5fn,cutoff=None):
         ad.energy = torch.Tensor(np.array(data["energy"])) * hartree_to_ev
         ad.force = torch.Tensor(np.array(data["force"])) * hartree_to_ev/bohr_to_angstrom
         ad.dipole = torch.Tensor(np.array(data["dipole"]))[None,:] * bohr_to_angstrom
-        ad.quadrupole = torch.Tensor(np.array(data["quadrupole"]))[None,...] * bohr_to_angstrom**2
+        quad = torch.Tensor(np.array(data["quadrupole"])) * bohr_to_angstrom**2
+        eye = torch.eye(3).to(quad.device)
+        quad = quad - 1/3*quad.trace()*eye #Subtract trace of quad 
+        ad.quadrupole = quad[None,...]
+        
         ad.mbi_charges = torch.Tensor(np.array(data["mbis_charges"])).squeeze()
         return ad
 
