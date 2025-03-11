@@ -34,6 +34,20 @@ def from_h5key(h5key,h5fn,cutoff=None):
         ad.mbi_charges = torch.Tensor(np.array(data["mbis_charges"])).squeeze()
         return ad
 
+def from_mol(mol,cutoff=4.0):
+    els = mol._atm[:,0]
+    pos = mol.atom_coords(unit='Ang')
+    atoms = ase.Atoms(numbers=els,positions=pos)
+    ad = AtomicData.from_atoms(atoms,cutoff=cutoff) #makes graph structure
+    return ad
+
+def batch_from_mol(mol,cutoff=4.0):
+    dataset = [from_mol(mol)]
+    dataloader = DataLoader(dataset, batch_size=1, drop_last=False, shuffle=False)
+    for batch in dataloader:
+        break
+    return batch
+
 class SpiceDataset(Dataset):
     def __init__(self,root="data/aodata.h5",cutoff=4.0,
                 transform=None, pre_transform=None, pre_filter=None):
