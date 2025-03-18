@@ -30,6 +30,9 @@ def from_h5key(h5key,h5fn,cutoff=None):
         eye = torch.eye(3).to(quad.device)
         quad = quad - 1/3*quad.trace()*eye #Subtract trace of quad 
         ad.quadrupole = quad[None,...]
+
+        if "bec" in data.keys():
+            ad.bec = torch.Tensor(np.array(data["bec"]))
         
         ad.mbi_charges = torch.Tensor(np.array(data["mbis_charges"])).squeeze()
         return ad
@@ -87,7 +90,8 @@ class SpiceInMemoryDataset(Dataset):
 #Should I subtract average energies, etc.? huh...
 class SpiceData(L.LightningDataModule):
     def __init__(self, root="data/spice-dipep.h5", cutoff=4.0, in_memory=False, drop_last=True,
-                 batch_size=32, valid_p=0.1, test_p=0.1):
+                 batch_size=32, valid_p=0.1, test_p=0.1, 
+                 shuffle=True, num_train=None, num_val=None, num_test=None):
         super().__init__()
         self.batch_size = batch_size
         self.root = root
@@ -96,6 +100,10 @@ class SpiceData(L.LightningDataModule):
         self.cutoff = cutoff
         self.drop_last = drop_last
         self.in_memory = in_memory
+        self.shuffle = shuffle
+        self.num_train = num_train
+        self.num_val = num_val
+        self.num_test = num_test
         try:
             self.num_cpus = int(os.environ['SLURM_JOB_CPUS_PER_NODE'])
         except:
@@ -108,12 +116,19 @@ class SpiceData(L.LightningDataModule):
         else:
             dataset = SpiceInMemoryDataset(self.root,cutoff=self.cutoff)
         torch.manual_seed(12345)
-        dataset = dataset.shuffle()
+        if self.shuffle:
+            dataset = dataset.shuffle()
         cut1 = int(len(dataset)*(1-self.valid_p-self.test_p))
         cut2 = int(len(dataset)*(1-self.test_p))
-        self.train = dataset[:cut1]
-        self.val = dataset[cut1:cut2]
-        self.test = dataset[cut2:]
+        if not self.num_train:
+            self.train = dataset[:cut1]
+            self.val = dataset[cut1:cut2]
+            self.test = dataset[cut2:]
+        else:
+            self.train = dataset[:self.num_train]
+            self.val = dataset[self.num_train:self.num_train+self.num_val]
+            self.test = dataset[self.num_train+self.num_val:self.num_train+self.num_val+self.num_test]
+            
 
     def train_dataloader(self):
         train_loader = DataLoader(self.train, batch_size=self.batch_size, drop_last=self.drop_last,
